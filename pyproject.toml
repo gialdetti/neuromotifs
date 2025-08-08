@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "neuromotifs"
-version = "0.1.0a1"
+version = "0.1.0a2"
 description = "Geometry-aware network motif analysis for neocortical microcircuits"
 readme = "README.md"
 authors = [
@@ -40,7 +40,7 @@ Issues = "https://github.com/gialdetti/neuromotifs/issues"
 neuromotifs = "neuromotifs.cli:app"
 
 [tool.setuptools.package-data]
-neuromotifs = ["data/nmc/motifs.csv"]
+neuromotifs = ["data/nmc/motifs.csv.gz"]
 
 [tool.setuptools]
 include-package-data = true
