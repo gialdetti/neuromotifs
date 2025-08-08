@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "neuromotifs"
-version = "0.1.0a0"
+version = "0.1.0a1"
 description = "Geometry-aware network motif analysis for neocortical microcircuits"
 readme = "README.md"
 authors = [

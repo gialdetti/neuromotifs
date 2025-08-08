@@ -12,7 +12,7 @@ authors:
     given-names: Michael
   - family-names: Segev
     given-names: Idan
-version: 0.1.0a0
+version: 0.1.0a1
 doi: 10.1101/656058
 identifiers: []
 repository-code: https://github.com/gialdetti/neuromotifs
