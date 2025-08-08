@@ -1,0 +1,18 @@
+cff-version: 1.2.0
+title: neuromotifs
+message: If you use this package, please cite both the paper and the software.
+authors:
+  - family-names: Gal
+    given-names: Eyal
+  - family-names: Perin
+    given-names: Rodrigo
+  - family-names: Markram
+    given-names: Henry
+  - family-names: London
+    given-names: Michael
+  - family-names: Segev
+    given-names: Idan
+version: 0.1.0a0
+doi: 10.1101/656058
+identifiers: []
+repository-code: https://github.com/gialdetti/neuromotifs
