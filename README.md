@@ -47,10 +47,10 @@ pip install -e .[dev]
 
 ### Examples
 
-| Theme | MyBinder | Colab |
-| -- | :--: | :--: |
-| [Motif expression levels](https://nbviewer.org/github/gialdetti/neuromotifs/blob/main/examples/motif-expression-levels.ipynb) | [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/gialdetti/neuromotifs/main?filepath=examples/motif-expression-levels.ipynb) | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/gialdetti/neuromotifs/blob/main/examples/motif-expression-levels.ipynb) |
-| [Generative pipeline: connectome → model → samples → motifs](https://nbviewer.org/github/gialdetti/neuromotifs/blob/main/examples/generative-pipeline.ipynb) | [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/gialdetti/neuromotifs/main?filepath=examples/generative-pipeline.ipynb) | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/gialdetti/neuromotifs/blob/main/examples/generative-pipeline.ipynb) |
+| Notebook | Run |
+| -- | :--: |
+| [Generative pipeline: connectome → model → samples → motifs](https://github.com/gialdetti/neuromotifs/blob/main/examples/generative-pipeline.ipynb) | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/gialdetti/neuromotifs/blob/main/examples/generative-pipeline.ipynb) |
+| [Motif expression levels](https://github.com/gialdetti/neuromotifs/blob/main/examples/motif-expression-levels.ipynb) | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/gialdetti/neuromotifs/blob/main/examples/motif-expression-levels.ipynb) |
 
 ## Citing
 Please cite the paper and this package (see `CITATION.cff`).

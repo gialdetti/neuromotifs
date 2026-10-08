@@ -47,6 +47,11 @@ neuromotifs = "neuromotifs.cli:app"
 [tool.setuptools.package-data]
 neuromotifs = ["data/*.md", "data/**/*.npz", "data/**/*.csv.gz"]
 
+[dependency-groups]
+dev = [
+    "altair>=6.2.2",
+]
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 
