@@ -33,8 +33,10 @@ def motif_counts_row(A, **labels) -> dict:
 def sample_motif_counts(P, n_samples, base_seed=0, n_jobs=1, **labels) -> pd.DataFrame:
     """Motif counts of ``n_samples`` networks drawn from ``P``, one row each.
 
-    Network ``i`` is drawn with ``np.random.default_rng(base_seed + i)`` and the seed is recorded,
-    so any row can be regenerated on its own. ``n_jobs`` is passed to ``joblib.Parallel``.
+    Network ``i`` is drawn with ``np.random.RandomState(base_seed + i).binomial(1, P)`` and the seed
+    is recorded, so any row can be regenerated on its own: this is exactly how the bundled
+    ``motifs.csv.gz`` rows were drawn, and the legacy stream is frozen across NumPy versions.
+    ``n_jobs`` is passed to ``joblib.Parallel``.
     """
     seeds = base_seed + np.arange(n_samples)
     rows = Parallel(n_jobs=n_jobs)(delayed(_sample_row)(P, seed, labels) for seed in seeds)
@@ -42,5 +44,5 @@ def sample_motif_counts(P, n_samples, base_seed=0, n_jobs=1, **labels) -> pd.Dat
 
 
 def _sample_row(P, seed, labels) -> dict:
-    A = np.random.default_rng(seed).binomial(1, P)
+    A = np.random.RandomState(seed).binomial(1, P)
     return motif_counts_row(A, seed=int(seed), **labels)

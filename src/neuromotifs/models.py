@@ -106,11 +106,12 @@ class GeometricModel(BaseEstimator):
         """Networks drawn from the fitted probabilities, as independent Bernoulli edges.
 
         Returns one ``(n, n)`` int8 matrix, or ``(n_samples, n, n)`` when ``n_samples`` is given.
+        Draws use the legacy ``numpy.random.RandomState`` stream, which NumPy keeps frozen, so a
+        seed regenerates the same network in any NumPy version (the paper's samples were drawn this way).
         """
         P = self.predict_proba(positions)
-        rng = np.random.default_rng(random_state)
         size = None if n_samples is None else (n_samples, *P.shape)
-        return rng.binomial(1, P, size=size).astype(np.int8)
+        return np.random.RandomState(random_state).binomial(1, P, size=size).astype(np.int8)
 
 
 def order_name(order) -> str:
