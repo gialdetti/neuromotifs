@@ -11,8 +11,26 @@ Python tools to load neuronal microcircuit geometry, generate geometry-aware nul
 
 ## Quickstart
 ```python
-# TBD
+from neuromotifs import GeometricModel, load_nmc, motif_table, sample_motif_counts
+
+# a spatial network (node position and adjacency matrix)
+connectome = load_nmc("L5_MC")
+
+# a geometrical model, 2nd order
+model = GeometricModel("dd").fit(connectome.positions, connectome.A)
+
+# n x n connection probabilities
+P = model.predict_proba(connectome.positions)
+
+# the connectome's 13 triplet-motif counts
+observed = motif_table(connectome.A, model="bb")
+
+# one network per seed, one row each
+sampled = sample_motif_counts(P, n_samples=100, base_seed=1300, model="dd")
 ```
+Orders: `er` (constant), `dd` (distance), `ddz` (bipolar distance), `od` (offset), `ld` (location).
+Any scikit-learn classifier can replace the paper's: `GeometricModel("od", classifier=HistGradientBoostingClassifier())`.
+The paper's own counts ship with the package, `load_motifs()`; the example notebook below checks the pipeline against them.
 
 ## Data
 - `data/nmc/` contains tiny demonstrators only.
