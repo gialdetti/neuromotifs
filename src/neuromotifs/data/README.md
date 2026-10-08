@@ -51,6 +51,24 @@ with h5py.File("cons_locs_pathways_mc2_Column.h5") as h5:
     )
 ```
 
+## `tests/data/L5_MC.dd.P.npz` — the regression reference (repository only)
+
+Not in this folder and not shipped in the wheel: it lives under `tests/` and exists for one test.
+It is the `dd` (distance-dependent) probability matrix of `L5_MC` as fitted for the paper, kept so
+that `test_dd_fit_reproduces_paper_probabilities` can refit with today's scikit-learn and assert
+that nothing has drifted.
+
+| Key | Content |
+|---|---|
+| `P` | (395, 395) float32 connection probabilities, zero diagonal, mean 0.00571 |
+| `mtype`, `order` | `L5_MC`, `dd` |
+| `classifier` | `GradientBoostingClassifier(learning_rate=0.01, n_estimators=500, max_depth=5, random_state=1234)` |
+| `provenance` | converted from `geometrical_models.L5_MC.adjs.pkl` (fitted 2021-06, scikit-learn 0.21); reproduced with scikit-learn 1.9.1 on 2026-10-08, max abs diff 4e-4 |
+
+The test tolerance is 1e-3 on every entry and a correlation above 0.9999. The sampling regression
+(`test_dd_samples_reproduce_paper_distribution`) draws 200 networks from this matrix and compares
+their motif counts with the 1,000 `dd` rows of `motifs.csv.gz`. Both run only with `pytest --runslow`.
+
 ## Not in this folder
 
 **The full connectome.** `cons_locs_pathways_mc2_Column.h5` (34.7 MB; all 55 m-types, positions and
