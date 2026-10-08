@@ -3,16 +3,18 @@
 from .datasets import Connectome, bundled_path, load_motifs, load_nmc, make_positions
 from .features import pairwise_features, pairwise_indices
 from .models import GeometricModel, paper_classifier
-from .sampling import motif_counts, sample_motif_counts
+from .sampling import MOTIF_COLUMNS, motif_counts, motif_table, sample_motif_counts
 
 __all__ = [
     "Connectome",
+    "MOTIF_COLUMNS",
     "GeometricModel",
     "bundled_path",
     "load_motifs",
     "load_nmc",
     "make_positions",
     "motif_counts",
+    "motif_table",
     "paper_classifier",
     "pairwise_features",
     "pairwise_indices",
