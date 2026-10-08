@@ -4,7 +4,7 @@ import numpy as np
 import pytest
 
 from neuromotifs import load_motifs, load_nmc, motif_counts, sample_motif_counts
-from neuromotifs.sampling import MOTIF_COLUMNS, motif_counts_row
+from neuromotifs.sampling import MOTIF_COLUMNS, motif_table
 
 REFERENCE = Path(__file__).parent / "data" / "L5_MC.dd.P.npz"
 
@@ -19,13 +19,30 @@ def test_motif_counts_match_paper(paper_l5_mc):
     bb = paper_l5_mc.query("model == 'bb'").iloc[0]
     assert np.array_equal(motif_counts(A), bb[MOTIF_COLUMNS].values)
 
-    row = motif_counts_row(A, model="bb")
-    assert (row["nodes"], row["edges"], row["reciprocal_edges"]) == (
+    table = motif_table(A, model="bb")
+    assert len(table) == 1 and list(table.columns) == MOTIF_COLUMNS + [
+        "nodes",
+        "edges",
+        "reciprocal_edges",
+        "model",
+    ]
+    assert table.iloc[0][["nodes", "edges", "reciprocal_edges"]].tolist() == [
         395,
         891,
         bb["reciprocal_edges"],
-    )
-    assert row["model"] == "bb"
+    ]
+    assert table["model"].iloc[0] == "bb"
+
+
+def test_motif_table_of_a_stack_with_per_row_labels():
+    A = np.zeros((4, 4), dtype=int)
+    A[0, 1] = A[0, 2] = A[1, 2] = 1  # one feed-forward loop: motif 4
+    table = motif_table(np.stack([A, A.T]), seed=[7, 8], celltype="toy")
+    assert table["motif_4"].tolist() == [1, 1] and table["edges"].tolist() == [3, 3]
+    assert table["seed"].tolist() == [7, 8] and table["celltype"].tolist() == [
+        "toy",
+        "toy",
+    ]
 
 
 def test_sample_table_schema_and_seeds():
