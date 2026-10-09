@@ -7,7 +7,7 @@ from sklearn.ensemble import HistGradientBoostingClassifier
 from sklearn.exceptions import NotFittedError
 from sklearn.metrics import roc_auc_score
 
-from neuromotifs import GeometricModel, load_nmc, make_positions
+from neuromotifs import MOTIF_COLUMNS, GeometricModel, draw_network, load_motifs, load_nmc, make_positions, motif_counts
 from neuromotifs.models import ORDERS, order_name, paper_classifier
 
 REFERENCE = Path(__file__).parent / "data" / "L5_MC.dd.P.npz"
@@ -83,16 +83,20 @@ def test_fit_recovers_distance_dependence(toy):
     assert P[off].mean() == pytest.approx(A[off].mean(), rel=0.1)
 
 
-def test_sample_shapes_and_seed(toy):
+def test_sample_is_one_draw_per_seed(toy):
     positions, A = toy
     model = GeometricModel("er").fit(positions, A)
+    assert np.array_equal(model.positions_, positions)
 
-    one = model.sample(positions, random_state=0)
-    assert one.shape == (60, 60) and one.dtype == np.int8
-    assert np.array_equal(one, model.sample(positions, random_state=0))
+    stack = model.sample(n_samples=3, random_state=10)
+    assert stack.shape == (3, 60, 60) and stack.dtype == np.int8
+    assert not stack[:, np.eye(60, dtype=bool)].any()
+    assert np.array_equal(stack, model.sample(n_samples=3, random_state=10))
+    assert np.array_equal(stack[2], model.sample(random_state=12)[0])  # seed 10 + 2
 
-    many = model.sample(positions, n_samples=3, random_state=0)
-    assert many.shape == (3, 60, 60) and not many[:, np.eye(60, dtype=bool)].any()
+    P = model.predict_proba(positions)
+    assert np.array_equal(stack, np.stack([draw_network(P, seed) for seed in (10, 11, 12)]))
+    assert model.sample(n_samples=2, positions=positions[:10]).shape == (2, 10, 10)
 
 
 @pytest.mark.slow
@@ -106,3 +110,37 @@ def test_dd_fit_reproduces_paper_probabilities(l5_mc):
     )
     assert np.abs(P - reference).max() < 1e-3
     assert np.corrcoef(P.ravel(), reference.ravel())[0, 1] > 0.9999
+
+
+def test_draw_network_is_seeded_and_binary():
+    P = np.full((30, 30), 0.1)
+    np.fill_diagonal(P, 0)
+    A = draw_network(P, seed=100)
+    assert A.shape == (30, 30) and A.dtype == np.int8 and set(np.unique(A)) <= {0, 1}
+    assert not A.diagonal().any() and 40 <= A.sum() <= 140
+    assert np.array_equal(A, draw_network(P, seed=100))
+    assert np.array_equal(A, np.random.RandomState(100).binomial(1, P))  # the paper's call
+
+
+def test_er_ratio_of_feedforward_to_cycle():
+    """Independent symmetric edges give E[#4] = 3 E[#7] exactly; a sample should sit near 3."""
+    n, p = 150, 0.05
+    P = np.full((n, n), p)
+    np.fill_diagonal(P, 0)
+    counts = [motif_counts(draw_network(P, seed)) for seed in range(300)]
+    m4 = np.mean([c["motif_4"] for c in counts])
+    m7 = np.mean([c["motif_7"] for c in counts])
+    assert m4 / m7 == pytest.approx(3, rel=0.1)
+
+
+@pytest.mark.slow
+def test_dd_draws_reproduce_paper_distribution():
+    """200 draws from the reference dd matrix match the paper's 1000-sample dd distribution."""
+    import pandas as pd
+
+    P = np.load(REFERENCE)["P"].astype(float)
+    paper = load_motifs().query("celltype == 'L5_MC' and model == 'dd'")[MOTIF_COLUMNS]
+    drawn = pd.DataFrame([motif_counts(draw_network(P, seed)) for seed in range(1234, 1434)])[MOTIF_COLUMNS]
+    frequent = paper.mean() >= 5
+    z = (drawn.mean() - paper.mean()) / np.sqrt(paper.var() / len(paper) + drawn.var() / len(drawn))
+    assert z[frequent].abs().max() < 4

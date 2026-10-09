@@ -45,13 +45,6 @@ ORDERS = {
 """Feature set of each model order, in increasing order."""
 
 
-def paper_classifier() -> GradientBoostingClassifier:
-    """The classifier of the paper's Figures 2–3: a gradient-boosted tree ensemble, fixed seed."""
-    return GradientBoostingClassifier(
-        learning_rate=0.01, n_estimators=500, max_depth=5, random_state=1234
-    )
-
-
 class GeometricModel(BaseEstimator):
     """A geometric null model of connectivity, of a given order.
 
@@ -65,6 +58,8 @@ class GeometricModel(BaseEstimator):
 
     Attributes
     ----------
+    positions_ : array (n, 3)
+        The positions the model was fitted on, the default for :meth:`sample`.
     feature_names_ : list of str
         The features the order uses.
     classifier_ : fitted classifier (orders 2–5)
@@ -80,6 +75,7 @@ class GeometricModel(BaseEstimator):
         """Fit on a connectome: ``positions`` (n, 3) and its binary adjacency ``A`` (n, n)."""
         features = pairwise_features(positions)
         y = np.asarray(A)[features["from"], features["to"]] != 0
+        self.positions_ = np.asarray(positions, dtype=float)
         self.feature_names_ = ORDERS[order_name(self.order)]
         if self.feature_names_:
             classifier = (
@@ -102,16 +98,22 @@ class GeometricModel(BaseEstimator):
         P[features["from"], features["to"]] = p
         return P
 
-    def sample(self, positions, n_samples=None, random_state=None) -> np.ndarray:
-        """Networks drawn from the fitted probabilities, as independent Bernoulli edges.
+    def sample(self, n_samples=1, random_state=None, positions=None) -> np.ndarray:
+        """``n_samples`` networks drawn from the model, as a stack ``(n_samples, n, n)`` of int8.
 
-        Returns one ``(n, n)`` int8 matrix, or ``(n_samples, n, n)`` when ``n_samples`` is given.
-        Draws use the legacy ``numpy.random.RandomState`` stream, which NumPy keeps frozen, so a
-        seed regenerates the same network in any NumPy version (the paper's samples were drawn this way).
+        Network ``i`` is :func:`draw_network` with seed ``random_state + i``, so with the paper's seeds
+        it regenerates the paper's networks. Positions default to the fitted ones. The stack lives in
+        memory; for thousands of large networks loop over :func:`draw_network` and keep only what you
+        measure.
         """
-        P = self.predict_proba(positions)
-        size = None if n_samples is None else (n_samples, *P.shape)
-        return np.random.RandomState(random_state).binomial(1, P, size=size).astype(np.int8)
+        check_is_fitted(self)
+        P = self.predict_proba(self.positions_ if positions is None else positions)
+        seeds = (
+            [None] * n_samples
+            if random_state is None
+            else random_state + np.arange(n_samples)
+        )
+        return np.stack([draw_network(P, seed) for seed in seeds])
 
 
 def order_name(order) -> str:
@@ -123,4 +125,20 @@ def order_name(order) -> str:
         return names[order - 1]
     raise ValueError(
         f"order must be one of {names} or a rank 1-{len(names)}, got {order!r}"
+    )
+
+
+def draw_network(P, seed=None) -> np.ndarray:
+    """One network from a probability matrix: independent Bernoulli edges, ``np.random.RandomState(seed)``.
+
+    The legacy stream is frozen across NumPy versions, and it is how the paper drew its samples, so a
+    seed regenerates the same network anywhere. Works on any ``P``, fitted here or archived.
+    """
+    return np.random.RandomState(seed).binomial(1, P).astype(np.int8)
+
+
+def paper_classifier() -> GradientBoostingClassifier:
+    """The classifier of the paper's Figures 2–3: a gradient-boosted tree ensemble, fixed seed."""
+    return GradientBoostingClassifier(
+        learning_rate=0.01, n_estimators=500, max_depth=5, random_state=1234
     )

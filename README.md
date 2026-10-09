@@ -11,36 +11,46 @@ Python tools to load neuronal microcircuit geometry, generate geometry-aware nul
 
 ## Quickstart
 ```python
-from neuromotifs import GeometricModel, load_nmc, motif_table, sample_motif_counts
+from neuromotifs import load_nmc, GeometricModel
+import netsci.metrics.motifs as nsm
 
-# a spatial network (node position and adjacency matrix)
+# a spatial network: soma positions and the adjacency matrix A
 connectome = load_nmc("L5_MC")
 
-# a geometrical model, 2nd order
+# a geometric model, 2nd order (distance-dependent), fitted with the paper's classifier
 model = GeometricModel("dd").fit(connectome.positions, connectome.A)
 
-# n x n connection probabilities
-P = model.predict_proba(connectome.positions)
+# 3 networks drawn from the model, seeds 1300, 1301, 1302 (the paper's)
+A_sampled = model.sample(n_samples=3, random_state=1300)
 
-# the connectome's 13 triplet-motif counts
-observed = motif_table(connectome.A, model="bb")
-
-# one network per seed, one row each
-sampled = sample_motif_counts(P, n_samples=100, base_seed=1300, model="dd")
+# triplet-motif counts of the connectome and of the samples (netsci counts the motifs)
+motifs_bb = nsm.motifs(connectome.A)
+motifs_sampled = [nsm.motifs(A) for A in A_sampled]
 ```
-Orders: `er` (constant), `dd` (distance), `ddz` (bipolar distance), `od` (offset), `ld` (location).
-Any scikit-learn classifier can replace the paper's: `GeometricModel("od", classifier=HistGradientBoostingClassifier())`.
-The paper's own counts ship with the package, `load_motifs()`; the example notebook below checks the pipeline against them.
+Next:
+- **Orders**: `er`, `dd`, `ddz`, `od`, `ld` (constant, distance, bipolar distance, offset, position); `classifier=` swaps in any scikit-learn classifier.
+- **The paper's data**: `load_motifs()` ships its motif counts; `motif_counts(A)` names counts the same way; the example notebook checks the pipeline against them.
+- **Under the hood**: `model.predict_proba(positions)` gives the `n × n` connection probabilities; `draw_network(P, seed)` draws one network from any such matrix, fitted here or archived.
 
 ## Data
 - `data/nmc/` contains tiny demonstrators only.
 - For full datasets, see `data/README.md` for scripted download instructions.
 
 ## Installation
+Python 3.10 or newer; a virtual environment is recommended.
+
+Latest version, from GitHub:
 ```bash
-pip install neuromotifs
-# or, for dev
-pip install -e .[dev]
+python -m pip install git+https://github.com/gialdetti/neuromotifs.git
+```
+Append `@<tag-or-commit>` to the URL to pin a version. `python -m pip install neuromotifs` installs the
+PyPI release, which is 0.1.0a2 and predates the API above, until the next release.
+
+For development:
+```bash
+git clone https://github.com/gialdetti/neuromotifs.git && cd neuromotifs
+python -m pip install -e ".[dev]"
+python -m pytest            # add --runslow for the two regression tests against the paper (about a minute)
 ```
 
 ## Help and Support
